@@ -1,6 +1,7 @@
 package android.example.friendlychat;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -23,8 +24,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import android.example.friendlychat.DatabaseManager;
 
 public class FriendsListActivity extends AppCompatActivity {
 
@@ -56,97 +55,16 @@ public class FriendsListActivity extends AppCompatActivity {
         // Initialize the firebase components
         mFirebaseAuth = FirebaseAuth.getInstance();
 
-        // Launch the authentication screen (Firebase UI) and fill up the Map of userInfo
-        final Map<String, Object> userInfo = new HashMap<>();
-        mIdTokenListener = new FirebaseAuth.IdTokenListener() {
-            @Override
-            public void onIdTokenChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
+        // Choose authentication providers
+        List<AuthUI.IdpConfig> providers = Arrays.asList(
+                new AuthUI.IdpConfig.GoogleBuilder().build());
 
-                if (user != null) {
-                    userInfo.put("userName", user.getDisplayName());
-                    userInfo.put("emailId", user.getEmail());
-                    findExistingOrAddNewUser(userInfo);
-                    User.setmEmailId(user.getEmail());
-                    Log.d(LOG_TAG, "User.getmEmailId = " + User.getmEmailId());
-                    User.setmUsername(user.getDisplayName());
-                    //attachDatabaseReadListener();
-                    Toast.makeText(FriendsListActivity.this,
-                            "You're now signed in. Welcome to FriendlyChat!", Toast.LENGTH_SHORT).show();
-                } else {
-                    // User is not signed in yet
-                    //onSignedOutCleanup();
-                    // Choose authentication providers
-                    List<AuthUI.IdpConfig> providers = Arrays.asList(
-                            new AuthUI.IdpConfig.EmailBuilder().build(),
-                            //new AuthUI.IdpConfig.PhoneBuilder().build(),
-                            new AuthUI.IdpConfig.GoogleBuilder().build());
-
-                    // Create and launch sign-in intent
-                    startActivityForResult(
-                            AuthUI.getInstance()
-                                    .createSignInIntentBuilder()
-                                    .setIsSmartLockEnabled(false)
-                                    .setAvailableProviders(providers)
-                                    .build(),
-                            RC_SIGN_IN);
-                }
-            }
-        };
-
-//        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
-//            @Override
-//            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-//                FirebaseUser user = firebaseAuth.getCurrentUser();
-//
-//                if (user != null) {
-//                    userInfo.put("userName", user.getDisplayName());
-//                    userInfo.put("emailId", user.getEmail());
-//                    findExistingOrAddNewUser(userInfo);
-//                    User.setmEmailId(user.getEmail());
-//                    Log.d(LOG_TAG, "User.getmEmailId = " + User.getmEmailId());
-//                    User.setmUsername(user.getDisplayName());
-//                    //attachDatabaseReadListener();
-//                    Toast.makeText(FriendsListActivity.this,
-//                            "You're now signed in. Welcome to FriendlyChat!", Toast.LENGTH_SHORT).show();
-//                } else {
-//                    // User is not signed in yet
-//                    //onSignedOutCleanup();
-//                    // Choose authentication providers
-//                    List<AuthUI.IdpConfig> providers = Arrays.asList(
-//                            new AuthUI.IdpConfig.EmailBuilder().build(),
-//                            //new AuthUI.IdpConfig.PhoneBuilder().build(),
-//                            new AuthUI.IdpConfig.GoogleBuilder().build());
-//
-//                    // Create and launch sign-in intent
-//                    startActivityForResult(
-//                            AuthUI.getInstance()
-//                                    .createSignInIntentBuilder()
-//                                    .setIsSmartLockEnabled(false)
-//                                    .setAvailableProviders(providers)
-//                                    .build(),
-//                            RC_SIGN_IN);
-//                }
-//            }
-//        };
-
-        mFirebaseAuth.addIdTokenListener(mIdTokenListener);
-
-        // initialize the friends list (or array)
-        int m = 1;
-        for(String email: emails){
-            Log.d(LOG_TAG, "email = " + email + ", User.getmEmailId() = " + User.getmEmailId() + ", User.getmUsername = " + User.getmUsername());
-            if(!email.equals(User.getmEmailId())){
-                if(m == 1){
-                    contact1TextView.setText(email);
-                    m++;
-                }
-                else if(m == 2){
-                    contact2TextView.setText(email);
-                    m++;
-                }
-            }
-        }
+        // Create and launch sign-in intent
+        startActivityForResult(AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setAvailableProviders(providers)
+                        .build(),
+                RC_SIGN_IN);
 
         contact1TextView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -173,18 +91,56 @@ public class FriendsListActivity extends AppCompatActivity {
         });
     }
 
-    public void updateUserInfo(){
-        FirebaseUser user = mFirebaseAuth.getCurrentUser();
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-        User.setmEmailId(user.getEmail());
-        Log.d(LOG_TAG, "User.getmEmailId = " + User.getmEmailId());
-        User.setmUsername(user.getDisplayName());
+        if (requestCode == RC_SIGN_IN) {
+
+            if (resultCode == RESULT_OK) {
+                Toast.makeText(this, "Signed In!", Toast.LENGTH_SHORT).show();
+                reload();
+            } else if (resultCode == RESULT_CANCELED) {
+                Toast.makeText(this, "Sign In cancelled", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
     }
 
-//    private static void onSignedInInitialize(String displayName, String email) {
-//        mUsername = displayName;
-//        mEmailId = email;
-//    }
+    public void reload(){
+        FirebaseUser user = mFirebaseAuth.getCurrentUser();
+        Map<String, Object> userInfo = new HashMap<>();
+
+        // Putting the "userInfo" into the "users" collection
+        userInfo.put("userName", user.getDisplayName());
+        userInfo.put("emailId", user.getEmail());
+        findExistingOrAddNewUser(userInfo);
+
+        // Set the memeber variables in the "User" class
+        User.setEmailId(user.getEmail());
+        User.setUsername(user.getDisplayName());
+        Log.d(LOG_TAG, "User.getEmailId = " + User.getEmailId());
+
+        // Show a toast message when the user Authentication is complete
+        Toast.makeText(FriendsListActivity.this,
+                "You're now signed in as " + User.getEmailId() + ". Welcome to FriendlyChat!", Toast.LENGTH_SHORT).show();
+
+        // initialize the friends list (or array)
+        int m = 1;
+        for(String email: emails){
+            Log.d(LOG_TAG, "email = " + email + ", User.getmEmailId() = " + User.getEmailId() + ", User.getmUsername = " + User.getUsername());
+            if(!email.equals(User.getEmailId())){
+                if(m == 1){
+                    contact1TextView.setText(email);
+                    m++;
+                }
+                else if(m == 2){
+                    contact2TextView.setText(email);
+                    m++;
+                }
+            }
+        }
+    }
 
     @Override
     protected void onPause() {
@@ -203,14 +159,14 @@ public class FriendsListActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-
-//        // Update the userInfo
-//        updateUserInfo();
-        //mFirebaseAuth.addAuthStateListener(mAuthStateListener);
-
-
-
         super.onResume();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+//        AuthUI.getInstance()
+//                .signOut(this);
     }
 
     protected void findExistingOrAddNewUser(Map<String, Object> user) {
@@ -232,7 +188,7 @@ public class FriendsListActivity extends AppCompatActivity {
                             for (QueryDocumentSnapshot document : task.getResult()) {
 
                                 //if (user.get("emailId") == document.getData().get("emailId")) {
-                                User.setmMyUid(document.getId());
+                                User.setMyUid(document.getId());
                                 //}
 
                                 Log.d(LOG_TAG, document.getId() + " => " + document.getData());
@@ -242,23 +198,6 @@ public class FriendsListActivity extends AppCompatActivity {
                         }
                     }
                 });
-//
-//        if (myOwnUid[0] == null) {
-//            db.collection("users")
-//                    .add(user)
-//                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-//                        @Override
-//                        public void onSuccess(DocumentReference documentReference) {
-//                            Log.d(LOG_TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
-//                        }
-//                    })
-//                    .addOnFailureListener(new OnFailureListener() {
-//                        @Override
-//                        public void onFailure(@NonNull Exception e) {
-//                            Log.w(LOG_TAG, "Error adding document", e);
-//                        }
-//                    });
-//        }
     }
 
     private void onSignedOutCleanup() {

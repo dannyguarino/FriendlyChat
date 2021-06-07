@@ -15,11 +15,15 @@
  */
 package android.example.friendlychat;
 
+import java.sql.Time;
+import java.sql.Timestamp;
+
 public class FriendlyMessage {
 
     private String text;
     private String name;
     private String photoUrl;
+    //private Timestamp timestamp;
 
     public FriendlyMessage() {
     }
@@ -28,6 +32,7 @@ public class FriendlyMessage {
         this.text = text;
         this.name = name;
         this.photoUrl = photoUrl;
+        //Timestamp timestamp = new Timestamp(System.currentTimeMillis());
     }
 
     public String getText() {

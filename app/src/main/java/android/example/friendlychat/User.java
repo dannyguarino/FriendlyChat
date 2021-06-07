@@ -6,27 +6,23 @@ public class User {
     private static String mUsername = ANONYMOUS, mEmailId;
     private static String mMyUid;
 
-    public static String getmEmailId() {
+    public static String getEmailId() {
         return mEmailId;
     }
 
-    public static String getmUsername() {
-        return mUsername;
-    }
+    public static String getUsername() { return mUsername; }
 
-    public static String getmMyUid() {
-        return mMyUid;
-    }
+    public static String getMyUid() { return mMyUid; }
 
-    public static void setmEmailId(String mEmailId) {
+    public static void setEmailId(String mEmailId) {
         User.mEmailId = mEmailId;
     }
 
-    public static void setmUsername(String mUsername) {
+    public static void setUsername(String mUsername) {
         User.mUsername = mUsername;
     }
 
-    public static void setmMyUid(String mMyUid) {
+    public static void setMyUid(String mMyUid) {
         User.mMyUid = mMyUid;
     }
 }

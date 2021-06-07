@@ -5,7 +5,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -19,31 +18,22 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
+import com.google.firebase.firestore.core.OrderBy;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,8 +55,8 @@ public class MessageRoomActivity extends AppCompatActivity {
 
     private String mFriendUid;
 
-    //private FirebaseFirestore db;
     private CollectionReference mMsgCollectionRef;
+    private ListenerRegistration mListenerRegistration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,10 +66,6 @@ public class MessageRoomActivity extends AppCompatActivity {
         // Extract the friend Uid from the Intent Extras
         mFriendUid = getIntent().getStringExtra("friendUid");
         Log.d(LOG_TAG, "mFriendUid = " + mFriendUid);
-
-        // Initialize the Firebase components
-        //DatabaseManager.db = FirebaseFirestore.getInstance();
-        //mFirebaseAuth = FirebaseAuth.getInstance();
 
         // Initialize references to views
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -121,13 +107,11 @@ public class MessageRoomActivity extends AppCompatActivity {
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: Send messages on click
-                FriendlyMessage friendlyMessage = new FriendlyMessage(mMessageEditText.getText().toString(),
-                        User.getmUsername(), null);
 
                 Map<String, Object> msg = new HashMap<>();
                 msg.put("text", mMessageEditText.getText().toString());
-                msg.put("author", User.getmUsername());
+                msg.put("author", User.getUsername());
+                msg.put("timestamp", new Timestamp(new Date()));
 
                 // create a new "message" document in the "messages" collection
                 mMsgCollectionRef.document().set(msg);
@@ -136,23 +120,17 @@ public class MessageRoomActivity extends AppCompatActivity {
                 mMessageEditText.setText("");
             }
         });
-
-        // Previously, the auth state listener was here
     }
 
     private void attachDatabaseReadListener() {
-        String chatRoomId = null;
-
-//        Map
-//        DatabaseManager.db.collection("rooms").
 
         Map<String, Object> room = new HashMap<>();
-        //room.put("usersInRoom", new String[]{User.getmMyUid(), mFriendUid});
-        room.put(User.getmMyUid(), true);
+        //room.put("usersInRoom", new String[]{User.getMyUid(), mFriendUid});
+        room.put(User.getMyUid(), true);
         room.put(mFriendUid, true);
         //room.put("messages", null);
 
-        String roomId = getMessageRoomId(User.getmMyUid(), mFriendUid);
+        String roomId = getMessageRoomId(User.getMyUid(), mFriendUid);
         DatabaseManager.db.collection("rooms").document(roomId)
                 .set(room, SetOptions.merge());
 
@@ -162,28 +140,22 @@ public class MessageRoomActivity extends AppCompatActivity {
                 .collection("messages");
 
         DatabaseManager.db.collection("rooms")
-                .whereEqualTo(User.getmMyUid(), true)
+                .whereEqualTo(User.getMyUid(), true)
                 .whereEqualTo(mFriendUid, true)
-//                .whereArrayContains("usersInRoom", User.getmMyUid())
+//                .whereArrayContains("usersInRoom", User.getMyUid())
 //                .whereArrayContains("usersInRoom", mFriendUid)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
-                            int flag = 0;
                             for (QueryDocumentSnapshot document : task.getResult()) {
 
-                                mMsgCollectionRef = document.getReference().collection("messages");
+                                mMsgCollectionRef = document.getReference()
+                                        .collection("messages");
 
                                 Log.d(LOG_TAG, document.getId() + " => " + document.getData());
-                                Log.d(LOG_TAG, "This part is executed");
-                                flag = 1;
                             }
-
-//                            if(flag == 0){
-//
-//                            }
 
                         } else {
                             Log.d(LOG_TAG, "Error getting documents: ", task.getException());
@@ -191,7 +163,8 @@ public class MessageRoomActivity extends AppCompatActivity {
                     }
                 });
 
-        mMsgCollectionRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
+        mListenerRegistration = mMsgCollectionRef.orderBy("timestamp").
+                addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException e) {
                 if (e != null) {
@@ -199,11 +172,21 @@ public class MessageRoomActivity extends AppCompatActivity {
                     return;
                 }
 
-                for (QueryDocumentSnapshot doc : value) {
-                    if (doc.get("text") != null) {
-                        FriendlyMessage friendlyMessage =
-                                new FriendlyMessage(doc.getString("text"), doc.getString("author"), null);
-                        mMessageAdapter.add(friendlyMessage);
+                for (DocumentChange dc : value.getDocumentChanges()) {
+                    switch (dc.getType()) {
+                        case ADDED:
+                            FriendlyMessage friendlyMessage =
+                                new FriendlyMessage(dc.getDocument().getString("text"),
+                                        dc.getDocument().getString("author"), null);
+                            mMessageAdapter.add(friendlyMessage);
+                            //Log.d(LOG_TAG, "New city: " + dc.getDocument().getData());
+                            break;
+                        case MODIFIED:
+                            Log.d(LOG_TAG, "Modified city: " + dc.getDocument().getData());
+                            break;
+                        case REMOVED:
+                            Log.d(LOG_TAG, "Removed city: " + dc.getDocument().getData());
+                            break;
                     }
                 }
             }
@@ -211,20 +194,7 @@ public class MessageRoomActivity extends AppCompatActivity {
     }
 
     private void detachDatabaseReadListener(){
-
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == RC_SIGN_IN) {
-            if (resultCode == RESULT_OK) {
-                Toast.makeText(this, "Signed In!", Toast.LENGTH_SHORT).show();
-            } else if (resultCode == RESULT_CANCELED) {
-                Toast.makeText(this, "Sign In cancelled", Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        }
+        mListenerRegistration.remove();
     }
 
     @Override
