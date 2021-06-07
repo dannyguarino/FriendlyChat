@@ -8,4 +8,14 @@
     <string name="user_reena">Reena Burman</string>
     <string name="user_sarit">Sarit Burman</string>
 
+    <string name="user_rishita_email">rishitaburman7@gmail.com</string>
+
+    <!-- Strings for the activity_add_friend layout -->
+    <string name="hint_enter_friend_emailId">friend\'s EmailID</string>
+    <string name="label_new_friend_details">Friend\'s\nDetails</string>
+    <string name="hint_enter_friend_name">friend\'s Name</string>
+
+    <!-- Strings for the menu layout -->
+    <string name="action_save">Save</string>
+
 </resources>

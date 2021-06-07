@@ -8,7 +8,8 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MessageRoomActivity"/>
+        <activity android:name=".AddFriendActivity"></activity>
+        <activity android:name=".MessageRoomActivity" />
         <activity android:name=".FriendsListActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
