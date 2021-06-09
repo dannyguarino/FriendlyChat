@@ -6,6 +6,7 @@ import androidx.core.app.NavUtils;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.example.friendlychat.data.MessageContract;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -52,6 +53,7 @@ public class AddFriendActivity extends AppCompatActivity {
                 saveFriend();
                 Intent returnIntent = new Intent();
                 setResult(Activity.RESULT_OK, returnIntent);
+                //MessageContract.incrementDatabaseVersion();
                 finish();
                 return true;
 

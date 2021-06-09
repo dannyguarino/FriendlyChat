@@ -94,6 +94,7 @@ public class FriendsListActivity extends AppCompatActivity {
                 // Pass in the information related to the friend which can help the MainActivity load the
                 // correct chat room
                 Friend friend = (Friend) parent.getAdapter().getItem(position);
+                intent.putExtra("friendName", friend.getName());
                 intent.putExtra("friendUid", friend.getEmailId());
                 startActivity(intent);
             }

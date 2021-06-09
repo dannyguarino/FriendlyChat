@@ -3,8 +3,17 @@ package android.example.friendlychat;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
 
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
+import android.example.friendlychat.data.MessageContract;
+import android.example.friendlychat.data.MessageContract.MessageEntry;
+import android.example.friendlychat.sync.MessagesSyncTask;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -38,21 +47,38 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MessageRoomActivity extends AppCompatActivity {
+public class MessageRoomActivity extends AppCompatActivity implements
+        LoaderManager.LoaderCallbacks<Cursor> {
 
-    private static final String LOG_TAG = MessageRoomActivity.class.getName();
+    private static final String LOG_TAG = MessageRoomActivity.class.getSimpleName();
+
+    public static final String[] MESSAGES_QUERY_PROJECTION = {
+            MessageEntry.COLUMN_TEXT,
+            MessageEntry.COLUMN_AUTHOR,
+            MessageEntry.COLUMN_TIMESTAMP,
+            MessageEntry._ID
+    };
+
+    public static final int INDEX_COLUMN_TEXT = 0;
+    public static final int INDEX_COLUMN_AUTHOR = 1;
+    public static final int INDEX_COLUMN_TIMESTAMP = 2;
+
+    private static final int ID_MESSAGE_LOADER = 65;
+
+    private MessageCursorAdapter mMessageAdapter;
 
     private static final String ANONYMOUS = "anonymous";
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 1000;
     public static final int RC_SIGN_IN = 1;
 
     private ListView mMessageListView;
-    private MessageAdapter mMessageAdapter;
+    //private MessageAdapter mMessageAdapter;
     private ProgressBar mProgressBar;
     private ImageButton mPhotoPickerButton;
     private EditText mMessageEditText;
     private Button mSendButton;
 
+    private String mFriendName;
     private String mFriendUid;
 
     private CollectionReference mMsgCollectionRef;
@@ -63,9 +89,16 @@ public class MessageRoomActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message_room);
 
-        // Extract the friend Uid from the Intent Extras
+        // Extract the friend Uid and Name from the Intent Extras
         mFriendUid = getIntent().getStringExtra("friendUid");
-        Log.d(LOG_TAG, "mFriendUid = " + mFriendUid);
+        mFriendName = getIntent().getStringExtra("friendName");
+        //Log.d(LOG_TAG, "mFriendUid = " + mFriendUid);
+
+        //MessageContract.incrementDatabaseVersion();
+
+        // Set the values of the TABLE_NAME and CONTENT_URI variables in the MessageContract.MessageEntry class
+        MessageEntry.setTableName("messages_" + mFriendUid.substring(0, mFriendUid.indexOf("@gmail.com")));
+        MessageEntry.setContentUri(mFriendUid);
 
         // Initialize references to views
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -75,9 +108,16 @@ public class MessageRoomActivity extends AppCompatActivity {
         mSendButton = (Button) findViewById(R.id.sendButton);
 
         // Initialize message ListView and its adapter
-        List<FriendlyMessage> friendlyMessages = new ArrayList<>();
-        mMessageAdapter = new MessageAdapter(this, R.layout.item_message, friendlyMessages);
+//        List<FriendlyMessage> friendlyMessages = new ArrayList<>();
+//        mMessageAdapter = new MessageAdapter(this, R.layout.item_message, friendlyMessages);
+//        mMessageListView.setAdapter(mMessageAdapter);
+
+        // Setup a MessageCursorAdapter
+        mMessageAdapter = new MessageCursorAdapter(this, null);
         mMessageListView.setAdapter(mMessageAdapter);
+
+        // Kick off the loader
+        getSupportLoaderManager().initLoader(ID_MESSAGE_LOADER, null, this);
 
         // Initialize progress bar
         mProgressBar.setVisibility(ProgressBar.INVISIBLE);
@@ -112,6 +152,9 @@ public class MessageRoomActivity extends AppCompatActivity {
                 msg.put("text", mMessageEditText.getText().toString());
                 msg.put("author", User.getUsername());
                 msg.put("timestamp", new Timestamp(new Date()));
+
+//                Timestamp timeStmp = new Timestamp(new Date());
+//                timeStmp.toDate();
 
                 // create a new "message" document in the "messages" collection
                 mMsgCollectionRef.document().set(msg);
@@ -175,10 +218,21 @@ public class MessageRoomActivity extends AppCompatActivity {
                 for (DocumentChange dc : value.getDocumentChanges()) {
                     switch (dc.getType()) {
                         case ADDED:
-                            FriendlyMessage friendlyMessage =
-                                new FriendlyMessage(dc.getDocument().getString("text"),
-                                        dc.getDocument().getString("author"), null);
-                            mMessageAdapter.add(friendlyMessage);
+//                            FriendlyMessage friendlyMessage =
+//                                new FriendlyMessage(dc.getDocument().getString("text"),
+//                                        dc.getDocument().getString("author"), null);
+
+                            Timestamp timestamp = dc.getDocument().getTimestamp("timestamp");
+                            int nanosecondsTimestamp = timestamp.getNanoseconds();
+
+                            ContentValues values = new ContentValues();
+                            values.put("text", dc.getDocument().getString("text"));
+                            values.put("author", dc.getDocument().getString("author"));
+                            values.put("timestamp", nanosecondsTimestamp);
+
+                            MessagesSyncTask.syncMessages(MessageRoomActivity.this, values);
+
+                            //mMessageAdapter.add(friendlyMessage);
                             //Log.d(LOG_TAG, "New city: " + dc.getDocument().getData());
                             break;
                         case MODIFIED:
@@ -201,7 +255,7 @@ public class MessageRoomActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         detachDatabaseReadListener();
-        mMessageAdapter.clear();
+        //mMessageAdapter.clear();
     }
 
     @Override
@@ -219,5 +273,40 @@ public class MessageRoomActivity extends AppCompatActivity {
         else{
             return id2 + id1;
         }
+    }
+
+    @NonNull
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
+
+        switch (id){
+            case ID_MESSAGE_LOADER:
+                // Uri for all rows of message data in our "message" table
+                Uri messageQueryUri = MessageEntry.CONTENT_URI;
+                // Sort order: Ascending by the time stamp
+                String sortOrder = MessageEntry.COLUMN_TIMESTAMP + " ASC";
+
+                //String selection = MessageEntry.COLUMN_AUTHOR + " = " +  mFriendName;
+
+                return new CursorLoader(this,
+                        messageQueryUri,
+                        MESSAGES_QUERY_PROJECTION,
+                        null,
+                        null,
+                        sortOrder);
+
+            default:
+                throw new RuntimeException("Loader not implemented: " + id);
+        }
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
+        mMessageAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+        mMessageAdapter.swapCursor(null);
     }
 }
