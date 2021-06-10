@@ -142,13 +142,35 @@ public class MessageRoomActivity extends AppCompatActivity implements
                 msg.put("roomId", mRoomId);
                 msg.put("timestamp", new Timestamp(new Date()));
 
-                // create a new "message" document in the "messages" collection
+                // store my own messages in my local SQLite Database directly
+                ContentValues values = convertMapToContentValues(msg);
+                getApplicationContext().getContentResolver().insert(MessageEntry.CONTENT_URI, values);
+
+                // Set the maximum timestamp whenever a new value is inserted into the local database
+                MessageUtils.setMaxTimeStamp((long) values.get("timestamp"));
+
+                // create a new "message" document in the "messages" collection in the Firestore database
                 mMsgCollectionRef.document().set(msg);
 
                 // Clear input box
                 mMessageEditText.setText("");
             }
         });
+    }
+
+    private ContentValues convertMapToContentValues(Map<String, Object> msg){
+
+        Timestamp timestamp = (Timestamp) msg.get("timestamp");
+        Date date = timestamp.toDate();
+        long millisecondTimestamp = date.getTime();
+
+        ContentValues values = new ContentValues();
+        values.put("text", msg.get("text").toString());
+        values.put("author", msg.get("author").toString());
+        values.put("roomId", msg.get("roomId").toString());
+        values.put("timestamp", millisecondTimestamp);
+
+        return values;
     }
 
     private void attachDatabaseReadListener() {
@@ -193,6 +215,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
         mListenerRegistration = mMsgCollectionRef
                 .orderBy("timestamp")
                 .whereGreaterThan("timestamp", MessageUtils.getFirebaseMaxTimestamp())
+                //.whereNotEqualTo("author", User.getUsername())
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException e) {
@@ -208,19 +231,22 @@ public class MessageRoomActivity extends AppCompatActivity implements
                         case ADDED:
                             Log.i(LOG_TAG, "for loop iteration");
 
-                            Timestamp timestamp = dc.getDocument().getTimestamp("timestamp");
-                            Date date = timestamp.toDate();
-                            long millisecondTimestamp = date.getTime();
+                            Map<String, Object> msg = dc.getDocument().getData();
 
-                            ContentValues values = new ContentValues();
-                            values.put("text", dc.getDocument().getString("text"));
-                            values.put("author", dc.getDocument().getString("author"));
-                            values.put("roomId", dc.getDocument().getString("roomId"));
-                            values.put("timestamp", millisecondTimestamp);
+                            ContentValues values = convertMapToContentValues(msg);
 
-                            MessageUtils.setMaxTimeStamp(millisecondTimestamp);
+//                            ContentValues values = new ContentValues();
+//                            values.put("text", dc.getDocument().getString("text"));
+//                            values.put("author", dc.getDocument().getString("author"));
+//                            values.put("roomId", dc.getDocument().getString("roomId"));
+//                            values.put("timestamp", millisecondTimestamp);
 
+                            // Set the maximum timestamp whenever a new value is inserted into the local database
+                            MessageUtils.setMaxTimeStamp((long) values.get("timestamp"));
+
+                            // convert Hashmap to ContentValues and insert into the local database
                             getApplicationContext().getContentResolver().insert(MessageEntry.CONTENT_URI, values);
+
                             break;
                         case MODIFIED:
                             Log.d(LOG_TAG, "Modified city: " + dc.getDocument().getData());
