@@ -168,27 +168,27 @@ public class MessageRoomActivity extends AppCompatActivity implements
         mMsgCollectionRef = DatabaseManager.db.collection("rooms").document(mRoomId)
                 .collection("messages");
 
-        DatabaseManager.db.collection("rooms")
-                .whereEqualTo(User.getMyUid(), true)
-                .whereEqualTo(mFriendUid, true)
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-
-                                mMsgCollectionRef = document.getReference()
-                                        .collection("messages");
-
-                                Log.d(LOG_TAG, document.getId() + " => " + document.getData());
-                            }
-
-                        } else {
-                            Log.d(LOG_TAG, "Error getting documents: ", task.getException());
-                        }
-                    }
-                });
+//        DatabaseManager.db.collection("rooms")
+//                .whereEqualTo(User.getMyUid(), true)
+//                .whereEqualTo(mFriendUid, true)
+//                .get()
+//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+//                        if (task.isSuccessful()) {
+//                            for (QueryDocumentSnapshot document : task.getResult()) {
+//
+//                                mMsgCollectionRef = document.getReference()
+//                                        .collection("messages");
+//
+//                                Log.d(LOG_TAG, document.getId() + " => " + document.getData());
+//                            }
+//
+//                        } else {
+//                            Log.d(LOG_TAG, "Error getting documents: ", task.getException());
+//                        }
+//                    }
+//                });
 
         mListenerRegistration = mMsgCollectionRef
                 .orderBy("timestamp")
