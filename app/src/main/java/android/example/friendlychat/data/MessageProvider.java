@@ -17,18 +17,8 @@ public class MessageProvider extends ContentProvider {
 
     private MessagesDbHelper mOpenHelper;
 
-//    private String mFriendUid;
-//    private String TABLE_NAME;
-
-//    public MessageProvider(String friendUid) {
-//        super();
-//        mFriendUid = friendUid;
-//        TABLE_NAME = "messages_" + mFriendUid;
-//    }
-
     @Override
     public boolean onCreate() {
-        //MessageContract.incrementDatabaseVersion();
         mOpenHelper = new MessagesDbHelper(getContext());
         return true;
     }
@@ -38,10 +28,7 @@ public class MessageProvider extends ContentProvider {
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
 
         Cursor cursor;
-
         SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-
-        //db.setVersion(db.getVersion() + 1);
 
         cursor = db.query(
                 MessageContract.MessageEntry.TABLE_NAME,

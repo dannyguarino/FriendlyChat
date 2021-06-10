@@ -8,10 +8,10 @@ import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
 
 import android.content.ContentValues;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.example.friendlychat.data.MessageContract.MessageEntry;
 import android.example.friendlychat.data.MessageUtils;
-import android.example.friendlychat.sync.MessagesSyncTask;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
@@ -65,10 +65,8 @@ public class MessageRoomActivity extends AppCompatActivity implements
 
     private static final String ANONYMOUS = "anonymous";
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 1000;
-    public static final int RC_SIGN_IN = 1;
 
     private ListView mMessageListView;
-    //private MessageAdapter mMessageAdapter;
     private ProgressBar mProgressBar;
     private ImageButton mPhotoPickerButton;
     private EditText mMessageEditText;
@@ -87,32 +85,24 @@ public class MessageRoomActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message_room);
 
+        // Initialize the timestamp from SharedPreferences
+        MessageUtils.initializeMaxTimestampFromSharedPreferences(this);
+        Log.i(LOG_TAG, "onCreate() called: timestamp initialized from SharedPreferences");
+
         // Extract the friend Uid and Name from the Intent Extras
         mFriendUid = getIntent().getStringExtra("friendUid");
         mFriendName = getIntent().getStringExtra("friendName");
-        //Log.d(LOG_TAG, "mFriendUid = " + mFriendUid);
-
-        //MessageContract.incrementDatabaseVersion();
-
-        // Set the values of the TABLE_NAME and CONTENT_URI variables in the MessageContract.MessageEntry class
-//        MessageEntry.setTableName("messages_" + mFriendUid.substring(0, mFriendUid.indexOf("@gmail.com")));
-//        MessageEntry.setContentUri(mFriendUid);
 
         // Initialize references to views
-        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
-        mMessageListView = (ListView) findViewById(R.id.messageListView);
-        mPhotoPickerButton = (ImageButton) findViewById(R.id.photoPickerButton);
-        mMessageEditText = (EditText) findViewById(R.id.messageEditText);
-        mSendButton = (Button) findViewById(R.id.sendButton);
-
-        // Initialize message ListView and its adapter
-//        List<FriendlyMessage> friendlyMessages = new ArrayList<>();
-//        mMessageAdapter = new MessageAdapter(this, R.layout.item_message, friendlyMessages);
-//        mMessageListView.setAdapter(mMessageAdapter);
+        mProgressBar = findViewById(R.id.progressBar);
+        mMessageListView = findViewById(R.id.messageListView);
+        mPhotoPickerButton = findViewById(R.id.photoPickerButton);
+        mMessageEditText = findViewById(R.id.messageEditText);
+        mSendButton = findViewById(R.id.sendButton);
 
         attachDatabaseReadListener();
 
-        // Setup a MessageCursorAdapter
+        // Setup a MessageCursorAdapter and attach the ListView to it
         mMessageAdapter = new MessageCursorAdapter(this, null);
         mMessageListView.setAdapter(mMessageAdapter);
 
@@ -125,8 +115,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
         // Enable Send button when there's text to send
         mMessageEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -138,8 +127,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {
-            }
+            public void afterTextChanged(Editable editable) {}
         });
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(DEFAULT_MSG_LENGTH_LIMIT)});
 
@@ -153,9 +141,6 @@ public class MessageRoomActivity extends AppCompatActivity implements
                 msg.put("author", User.getUsername());
                 msg.put("roomId", mRoomId);
                 msg.put("timestamp", new Timestamp(new Date()));
-
-//                Timestamp timeStmp = new Timestamp(new Date());
-//                timeStmp.toDate();
 
                 // create a new "message" document in the "messages" collection
                 mMsgCollectionRef.document().set(msg);
@@ -178,7 +163,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
         DatabaseManager.db.collection("rooms").document(mRoomId)
                 .set(room, SetOptions.merge());
 
-        Log.d(LOG_TAG, "RoomId = " + mRoomId);
+        //Log.d(LOG_TAG, "RoomId = " + mRoomId);
 
         mMsgCollectionRef = DatabaseManager.db.collection("rooms").document(mRoomId)
                 .collection("messages");
@@ -186,8 +171,6 @@ public class MessageRoomActivity extends AppCompatActivity implements
         DatabaseManager.db.collection("rooms")
                 .whereEqualTo(User.getMyUid(), true)
                 .whereEqualTo(mFriendUid, true)
-//                .whereArrayContains("usersInRoom", User.getMyUid())
-//                .whereArrayContains("usersInRoom", mFriendUid)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
@@ -223,11 +206,6 @@ public class MessageRoomActivity extends AppCompatActivity implements
                 for (DocumentChange dc : value.getDocumentChanges()) {
                     switch (dc.getType()) {
                         case ADDED:
-//                            FriendlyMessage friendlyMessage =
-//                                new FriendlyMessage(dc.getDocument().getString("text"),
-//                                        dc.getDocument().getString("author"), null);
-
-                            //if(dc.getDocument().getMetadata().isFromCache()) return;
                             Log.i(LOG_TAG, "for loop iteration");
 
                             Timestamp timestamp = dc.getDocument().getTimestamp("timestamp");
@@ -242,10 +220,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
 
                             MessageUtils.setMaxTimeStamp(millisecondTimestamp);
 
-                            MessagesSyncTask.syncMessages(MessageRoomActivity.this, values);
-
-                            //mMessageAdapter.add(friendlyMessage);
-                            //Log.d(LOG_TAG, "New city: " + dc.getDocument().getData());
+                            getApplicationContext().getContentResolver().insert(MessageEntry.CONTENT_URI, values);
                             break;
                         case MODIFIED:
                             Log.d(LOG_TAG, "Modified city: " + dc.getDocument().getData());
@@ -271,6 +246,13 @@ public class MessageRoomActivity extends AppCompatActivity implements
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        MessageUtils.storeMaxtimestampInSharedPreferences(this);
+        Log.i(LOG_TAG, "onStop() called: timestamp stored in SharedPreferences");
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
     }
@@ -278,12 +260,8 @@ public class MessageRoomActivity extends AppCompatActivity implements
 
     public static String getMessageRoomId(String id1, String id2){
         int res = id1.compareTo(id2);
-        if(res < 0){
-            return id1 + id2;
-        }
-        else{
-            return id2 + id1;
-        }
+        if(res < 0){ return id1 + id2; }
+        else{ return id2 + id1; }
     }
 
     @NonNull
@@ -297,12 +275,12 @@ public class MessageRoomActivity extends AppCompatActivity implements
                 // Sort order: Ascending by the time stamp
                 String sortOrder = MessageEntry.COLUMN_TIMESTAMP + " ASC";
 
-//                String selection = MessageEntry.COLUMN_AUTHOR + " = \'" +  mFriendName +
-//                        "\' OR " + MessageEntry.COLUMN_READER + " = \'" + mFriendName + "\'";
-
+                // Pick only those messages which belong to this current message room
                 String selection = MessageEntry.COLUMN_ROOMID + " = \'" + mRoomId + "\'";
                 Log.i(LOG_TAG, "mRoomId = " + mRoomId);
 
+                // Create a new Cursor loader object, which returns a Cursor containing
+                // our desired rows (or tuples) from the "messages" table
                 return new CursorLoader(this,
                         messageQueryUri,
                         MESSAGES_QUERY_PROJECTION,

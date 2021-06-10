@@ -36,7 +36,6 @@ public class MessagesDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        //Log.e(LOG_TAG, "onUpgrade called: oldVersion = " + oldVersion + ", new_version = " + newVersion);
         db.execSQL("DROP TABLE IF EXISTS " + MessageEntry.TABLE_NAME);
         onCreate(db);
     }
