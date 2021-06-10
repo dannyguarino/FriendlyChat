@@ -29,7 +29,7 @@ public class MessageContract {
 
         public static final String COLUMN_TEXT = "text";
         public static final String COLUMN_AUTHOR = "author";
-        public static final String COLUMN_READER = "reader";
+        public static final String COLUMN_ROOMID = "roomId";
         public static final String COLUMN_TIMESTAMP = "timestamp";
 
 //        public static void setTableName(String tableName) {

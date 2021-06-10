@@ -8,9 +8,7 @@ import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
 
 import android.content.ContentValues;
-import android.content.Intent;
 import android.database.Cursor;
-import android.example.friendlychat.data.MessageContract;
 import android.example.friendlychat.data.MessageContract.MessageEntry;
 import android.example.friendlychat.data.MessageUtils;
 import android.example.friendlychat.sync.MessagesSyncTask;
@@ -20,14 +18,12 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.util.TimeUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -37,16 +33,12 @@ import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
-import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
-import com.google.firebase.firestore.core.OrderBy;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class MessageRoomActivity extends AppCompatActivity implements
@@ -57,14 +49,14 @@ public class MessageRoomActivity extends AppCompatActivity implements
     public static final String[] MESSAGES_QUERY_PROJECTION = {
             MessageEntry.COLUMN_TEXT,
             MessageEntry.COLUMN_AUTHOR,
-            MessageEntry.COLUMN_READER,
+            MessageEntry.COLUMN_ROOMID,
             MessageEntry.COLUMN_TIMESTAMP,
             MessageEntry._ID
     };
 
     public static final int INDEX_COLUMN_TEXT = 0;
     public static final int INDEX_COLUMN_AUTHOR = 1;
-    public static final int INDEX_COLUMN_READER = 2;
+    public static final int INDEX_COLUMN_ROOMID = 2;
     public static final int INDEX_COLUMN_TIMESTAMP = 3;
 
     private static final int ID_MESSAGE_LOADER = 65;
@@ -84,6 +76,8 @@ public class MessageRoomActivity extends AppCompatActivity implements
 
     private String mFriendName;
     private String mFriendUid;
+
+    private String mRoomId;
 
     private static CollectionReference mMsgCollectionRef;
     private static ListenerRegistration mListenerRegistration;
@@ -115,6 +109,8 @@ public class MessageRoomActivity extends AppCompatActivity implements
 //        List<FriendlyMessage> friendlyMessages = new ArrayList<>();
 //        mMessageAdapter = new MessageAdapter(this, R.layout.item_message, friendlyMessages);
 //        mMessageListView.setAdapter(mMessageAdapter);
+
+        attachDatabaseReadListener();
 
         // Setup a MessageCursorAdapter
         mMessageAdapter = new MessageCursorAdapter(this, null);
@@ -155,7 +151,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
                 Map<String, Object> msg = new HashMap<>();
                 msg.put("text", mMessageEditText.getText().toString());
                 msg.put("author", User.getUsername());
-                msg.put("reader", mFriendName);
+                msg.put("roomId", mRoomId);
                 msg.put("timestamp", new Timestamp(new Date()));
 
 //                Timestamp timeStmp = new Timestamp(new Date());
@@ -178,13 +174,13 @@ public class MessageRoomActivity extends AppCompatActivity implements
         room.put(mFriendUid, true);
         //room.put("messages", null);
 
-        String roomId = getMessageRoomId(User.getMyUid(), mFriendUid);
-        DatabaseManager.db.collection("rooms").document(roomId)
+        mRoomId = getMessageRoomId(User.getMyUid(), mFriendUid);
+        DatabaseManager.db.collection("rooms").document(mRoomId)
                 .set(room, SetOptions.merge());
 
-        Log.d(LOG_TAG, "RoomId = " + roomId);
+        Log.d(LOG_TAG, "RoomId = " + mRoomId);
 
-        mMsgCollectionRef = DatabaseManager.db.collection("rooms").document(roomId)
+        mMsgCollectionRef = DatabaseManager.db.collection("rooms").document(mRoomId)
                 .collection("messages");
 
         DatabaseManager.db.collection("rooms")
@@ -241,7 +237,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
                             ContentValues values = new ContentValues();
                             values.put("text", dc.getDocument().getString("text"));
                             values.put("author", dc.getDocument().getString("author"));
-                            values.put("reader", dc.getDocument().getString("reader"));
+                            values.put("roomId", dc.getDocument().getString("roomId"));
                             values.put("timestamp", millisecondTimestamp);
 
                             MessageUtils.setMaxTimeStamp(millisecondTimestamp);
@@ -277,7 +273,6 @@ public class MessageRoomActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        attachDatabaseReadListener();
     }
 
 
@@ -302,8 +297,11 @@ public class MessageRoomActivity extends AppCompatActivity implements
                 // Sort order: Ascending by the time stamp
                 String sortOrder = MessageEntry.COLUMN_TIMESTAMP + " ASC";
 
-                String selection = MessageEntry.COLUMN_AUTHOR + " = \'" +  mFriendName +
-                        "\' OR " + MessageEntry.COLUMN_READER + " = \'" + mFriendName + "\'";
+//                String selection = MessageEntry.COLUMN_AUTHOR + " = \'" +  mFriendName +
+//                        "\' OR " + MessageEntry.COLUMN_READER + " = \'" + mFriendName + "\'";
+
+                String selection = MessageEntry.COLUMN_ROOMID + " = \'" + mRoomId + "\'";
+                Log.i(LOG_TAG, "mRoomId = " + mRoomId);
 
                 return new CursorLoader(this,
                         messageQueryUri,

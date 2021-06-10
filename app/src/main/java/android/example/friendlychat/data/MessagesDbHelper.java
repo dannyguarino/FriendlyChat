@@ -13,7 +13,7 @@ public class MessagesDbHelper extends SQLiteOpenHelper {
 
     private static final String LOG_TAG = MessagesDbHelper.class.getSimpleName();
 
-    public static final String DATABASE_NAME = "messsage_store.db";
+    public static final String DATABASE_NAME = "message_store.db";
     public static final int DATABASE_VERSION = 1;
 
     public MessagesDbHelper(@Nullable Context context) {
@@ -28,7 +28,7 @@ public class MessagesDbHelper extends SQLiteOpenHelper {
                         MessageEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                         MessageEntry.COLUMN_TEXT + " TEXT, " +
                         MessageEntry.COLUMN_AUTHOR + " TEXT, " +
-                        MessageEntry.COLUMN_READER + " TEXT, " +
+                        MessageEntry.COLUMN_ROOMID + " TEXT, " +
                         MessageEntry.COLUMN_TIMESTAMP + " INTEGER NOT NULL UNIQUE);";
 
         db.execSQL(SQL_CREATE_MESSAGES_TABLE);
@@ -36,7 +36,7 @@ public class MessagesDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Log.e(LOG_TAG, "onUpgrade called: oldVersion = " + oldVersion + ", new_version = " + newVersion);
+        //Log.e(LOG_TAG, "onUpgrade called: oldVersion = " + oldVersion + ", new_version = " + newVersion);
         db.execSQL("DROP TABLE IF EXISTS " + MessageEntry.TABLE_NAME);
         onCreate(db);
     }
