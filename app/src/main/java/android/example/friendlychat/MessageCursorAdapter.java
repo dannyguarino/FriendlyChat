@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.example.friendlychat.data.MessageContract;
 import android.example.friendlychat.data.MessageContract.MessageEntry;
+import android.example.friendlychat.data.MessageUtils;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;

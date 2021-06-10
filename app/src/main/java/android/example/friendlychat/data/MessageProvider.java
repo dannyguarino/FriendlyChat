@@ -28,7 +28,7 @@ public class MessageProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        MessageContract.incrementDatabaseVersion();
+        //MessageContract.incrementDatabaseVersion();
         mOpenHelper = new MessagesDbHelper(getContext());
         return true;
     }
@@ -68,7 +68,10 @@ public class MessageProvider extends ContentProvider {
 
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
 
-        long newRowId = db.insert(MessageContract.MessageEntry.TABLE_NAME, null, values);
+        //long newRowId = db.insert(MessageContract.MessageEntry.TABLE_NAME, null, values);
+
+        long newRowId = db.insertWithOnConflict(MessageContract.MessageEntry.TABLE_NAME,
+                null, values, SQLiteDatabase.CONFLICT_IGNORE);
 
         if(newRowId == -1){
             Log.e(LOG_TAG, "Failed to insert row for " + uri);

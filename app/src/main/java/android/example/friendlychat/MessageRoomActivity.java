@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.example.friendlychat.data.MessageContract;
 import android.example.friendlychat.data.MessageContract.MessageEntry;
+import android.example.friendlychat.data.MessageUtils;
 import android.example.friendlychat.sync.MessagesSyncTask;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.TimeUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -55,13 +57,15 @@ public class MessageRoomActivity extends AppCompatActivity implements
     public static final String[] MESSAGES_QUERY_PROJECTION = {
             MessageEntry.COLUMN_TEXT,
             MessageEntry.COLUMN_AUTHOR,
+            MessageEntry.COLUMN_READER,
             MessageEntry.COLUMN_TIMESTAMP,
             MessageEntry._ID
     };
 
     public static final int INDEX_COLUMN_TEXT = 0;
     public static final int INDEX_COLUMN_AUTHOR = 1;
-    public static final int INDEX_COLUMN_TIMESTAMP = 2;
+    public static final int INDEX_COLUMN_READER = 2;
+    public static final int INDEX_COLUMN_TIMESTAMP = 3;
 
     private static final int ID_MESSAGE_LOADER = 65;
 
@@ -81,8 +85,8 @@ public class MessageRoomActivity extends AppCompatActivity implements
     private String mFriendName;
     private String mFriendUid;
 
-    private CollectionReference mMsgCollectionRef;
-    private ListenerRegistration mListenerRegistration;
+    private static CollectionReference mMsgCollectionRef;
+    private static ListenerRegistration mListenerRegistration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,8 +101,8 @@ public class MessageRoomActivity extends AppCompatActivity implements
         //MessageContract.incrementDatabaseVersion();
 
         // Set the values of the TABLE_NAME and CONTENT_URI variables in the MessageContract.MessageEntry class
-        MessageEntry.setTableName("messages_" + mFriendUid.substring(0, mFriendUid.indexOf("@gmail.com")));
-        MessageEntry.setContentUri(mFriendUid);
+//        MessageEntry.setTableName("messages_" + mFriendUid.substring(0, mFriendUid.indexOf("@gmail.com")));
+//        MessageEntry.setContentUri(mFriendUid);
 
         // Initialize references to views
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -151,6 +155,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
                 Map<String, Object> msg = new HashMap<>();
                 msg.put("text", mMessageEditText.getText().toString());
                 msg.put("author", User.getUsername());
+                msg.put("reader", mFriendName);
                 msg.put("timestamp", new Timestamp(new Date()));
 
 //                Timestamp timeStmp = new Timestamp(new Date());
@@ -206,14 +211,18 @@ public class MessageRoomActivity extends AppCompatActivity implements
                     }
                 });
 
-        mListenerRegistration = mMsgCollectionRef.orderBy("timestamp").
-                addSnapshotListener(new EventListener<QuerySnapshot>() {
+        mListenerRegistration = mMsgCollectionRef
+                .orderBy("timestamp")
+                .whereGreaterThan("timestamp", MessageUtils.getFirebaseMaxTimestamp())
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException e) {
                 if (e != null) {
                     Log.w(LOG_TAG, "Listen failed.", e);
                     return;
                 }
+
+                Log.i(LOG_TAG, "onEvent is called");
 
                 for (DocumentChange dc : value.getDocumentChanges()) {
                     switch (dc.getType()) {
@@ -222,13 +231,20 @@ public class MessageRoomActivity extends AppCompatActivity implements
 //                                new FriendlyMessage(dc.getDocument().getString("text"),
 //                                        dc.getDocument().getString("author"), null);
 
+                            //if(dc.getDocument().getMetadata().isFromCache()) return;
+                            Log.i(LOG_TAG, "for loop iteration");
+
                             Timestamp timestamp = dc.getDocument().getTimestamp("timestamp");
-                            int nanosecondsTimestamp = timestamp.getNanoseconds();
+                            Date date = timestamp.toDate();
+                            long millisecondTimestamp = date.getTime();
 
                             ContentValues values = new ContentValues();
                             values.put("text", dc.getDocument().getString("text"));
                             values.put("author", dc.getDocument().getString("author"));
-                            values.put("timestamp", nanosecondsTimestamp);
+                            values.put("reader", dc.getDocument().getString("reader"));
+                            values.put("timestamp", millisecondTimestamp);
+
+                            MessageUtils.setMaxTimeStamp(millisecondTimestamp);
 
                             MessagesSyncTask.syncMessages(MessageRoomActivity.this, values);
 
@@ -254,7 +270,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
     @Override
     protected void onPause() {
         super.onPause();
-        detachDatabaseReadListener();
+        //detachDatabaseReadListener();
         //mMessageAdapter.clear();
     }
 
@@ -286,12 +302,13 @@ public class MessageRoomActivity extends AppCompatActivity implements
                 // Sort order: Ascending by the time stamp
                 String sortOrder = MessageEntry.COLUMN_TIMESTAMP + " ASC";
 
-                //String selection = MessageEntry.COLUMN_AUTHOR + " = " +  mFriendName;
+                String selection = MessageEntry.COLUMN_AUTHOR + " = \'" +  mFriendName +
+                        "\' OR " + MessageEntry.COLUMN_READER + " = \'" + mFriendName + "\'";
 
                 return new CursorLoader(this,
                         messageQueryUri,
                         MESSAGES_QUERY_PROJECTION,
-                        null,
+                        selection,
                         null,
                         sortOrder);
 
