@@ -106,7 +106,7 @@ public class RSA {
         SharedPreferences sharedPref = activity.getPreferences(Context.MODE_PRIVATE);
 
         SharedPreferences.Editor editor = sharedPref.edit();
-        Log.i(LOG_TAG, "Keys stored in SharedPreferenes");
+        Log.e(LOG_TAG, "Keys stored in SharedPreferenes");
         editor.putString("publicKeyBytesBase64", publicKeyBytesBase64);
         editor.putString("privateKeyBytesBase64", privateKeyBytesBase64);
         editor.apply();
@@ -117,9 +117,9 @@ public class RSA {
         Activity activity = (Activity) context;
         SharedPreferences sharedPref = activity.getPreferences(Context.MODE_PRIVATE);
 
-        Log.i(LOG_TAG, "Keys loaded from SharedPreferences");
+        Log.e(LOG_TAG, "Keys loaded from SharedPreferences");
         publicKeyBytesBase64 = sharedPref.getString("publicKeyBytesBase64", null);
-        privateKeyBytesBase64 = sharedPref.getString("privateKeyBytes64", null);
+        privateKeyBytesBase64 = sharedPref.getString("privateKeyBytesBase64", null);
     }
 
     public static String getPrivateKeyBytesBase64() {

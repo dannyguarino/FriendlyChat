@@ -18,4 +18,8 @@
     <!-- Strings for the menu layout -->
     <string name="action_save">Save</string>
 
+    <!-- Strings for the key names of storing cryptographic keys in Shared Preferences -->
+    <string name="key_public_key">publicKeyBytesBase64</string>
+    <string name="key_private_key">privateKeyBytesBase64</string>
+
 </resources>

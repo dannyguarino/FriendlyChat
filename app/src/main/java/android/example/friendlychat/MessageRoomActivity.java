@@ -34,6 +34,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentChange;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
@@ -78,6 +79,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
 
     private String mFriendName;
     private String mFriendUid;
+    private String mFriendPublicKey;
 
     private String mRoomId;
 
@@ -97,7 +99,8 @@ public class MessageRoomActivity extends AppCompatActivity implements
         Intent intent = getIntent();
         mFriendUid = intent.getStringExtra("friendUid");
         mFriendName = intent.getStringExtra("friendName");
-        RSA.setFriendPublicKey(intent.getStringExtra("friendPublicKey"));
+        mFriendPublicKey = intent.getStringExtra("friendPublicKey");
+        //RSA.setFriendPublicKey(intent.getStringExtra("friendPublicKey"));
 
         // Initialize references to views
         mProgressBar = findViewById(R.id.progressBar);
@@ -144,7 +147,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
             public void onClick(View view) {
 
                 String text = mMessageEditText.getText().toString();
-                String encryptedText = RSA.encrypt(text, RSA.getFriendPublicKey());
+                String encryptedText = RSA.encrypt(text, mFriendPublicKey);
 
                 Map<String, Object> msg = new HashMap<>();
                 msg.put("text", text);
@@ -169,6 +172,18 @@ public class MessageRoomActivity extends AppCompatActivity implements
                 mMessageEditText.setText("");
             }
         });
+
+        // Set up a listener for any change in the publicKey of the friend
+//        DatabaseManager.db.collection("users").document(mFriendUid)
+//                .addSnapshotListener(new EventListener<DocumentSnapshot>() {
+//                    @Override
+//                    public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
+//
+//                        DatabaseManager.db.collection("users").document(User.getEmailId())
+//                                .collection("contacts").document(mFriendUid)
+//                                .set(value, SetOptions.merge());
+//                    }
+//                });
     }
 
     private ContentValues convertMapToContentValues(Map<String, Object> msg){

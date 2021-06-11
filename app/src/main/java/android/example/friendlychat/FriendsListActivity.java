@@ -215,8 +215,9 @@ public class FriendsListActivity extends AppCompatActivity {
                             for(QueryDocumentSnapshot document: task.getResult()){
 
                                 Friend friend =
-                                        new Friend(document.get("userName").toString(),
-                                                document.get("emailId").toString());
+                                        new Friend(document.getString("userName"),
+                                                document.getString("emailId"),
+                                                document.getString("userPublicKey"));
 
                                 mAdapter.add(friend);
                             }
@@ -236,9 +237,16 @@ public class FriendsListActivity extends AppCompatActivity {
         // generating cryptographic keys if not there yet
         RSA.loadKeysFromSharedPreferences(this);
         if(RSA.getPublicKeyBytesBase64() == null || RSA.getPrivateKeyBytesBase64() == null){
+            Log.e(LOG_TAG, "Public or private key is null");
             RSA.generateKeys();
-            RSA.saveKeysToSharedPreferences(this);
+            RSA.saveKeysToSharedPreferences(FriendsListActivity.this);
         }
+
+        // just for debugging, remove if necessary
+//        RSA.loadKeysFromSharedPreferences(this);
+//        if(RSA.getPublicKeyBytesBase64() == null || RSA.getPrivateKeyBytesBase64() == null){
+//            Log.e(LOG_TAG, "Public or private key is still null");
+//        }
 
         // putting the publicKey into the map for uploading to Firestore
         // as part of the "user" document
