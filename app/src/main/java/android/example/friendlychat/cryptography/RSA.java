@@ -134,7 +134,11 @@ public class RSA {
         RSA.friendPublicKey = friendPublicKey;
     }
 
-//    public static void stringToKey(String publicKeyB64) {
+    public static String getFriendPublicKey() {
+        return friendPublicKey;
+    }
+
+    //    public static void stringToKey(String publicKeyB64) {
 //
 //        if (publicKeyB64.contains("-----BEGIN PUBLIC KEY-----") || publicKeyB64.contains("-----END PUBLIC KEY-----"))
 //            publicKeyB64 = publicKeyB64.replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "");

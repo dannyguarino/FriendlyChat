@@ -2,6 +2,7 @@ package android.example.friendlychat;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
@@ -15,6 +16,7 @@ import android.example.friendlychat.cryptography.RSA;
 import android.example.friendlychat.data.MessageContract.MessageEntry;
 import android.example.friendlychat.data.MessageUtils;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -137,11 +139,15 @@ public class MessageRoomActivity extends AppCompatActivity implements
 
         // Send button sends a message and clears the EditText
         mSendButton.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public void onClick(View view) {
 
+                String text = mMessageEditText.getText().toString();
+                String encryptedText = RSA.encrypt(text, RSA.getFriendPublicKey());
+
                 Map<String, Object> msg = new HashMap<>();
-                msg.put("text", mMessageEditText.getText().toString());
+                msg.put("text", text);
                 msg.put("author", User.getUsername());
                 msg.put("roomId", mRoomId);
                 msg.put("timestamp", new Timestamp(new Date()));
@@ -152,6 +158,9 @@ public class MessageRoomActivity extends AppCompatActivity implements
 
                 // Set the maximum timestamp whenever a new value is inserted into the local database
                 MessageUtils.setMaxTimeStamp((long) values.get("timestamp"));
+
+                // replace the original text with the encrypted one which will be stored in Firestore
+                msg.replace("text", encryptedText);
 
                 // create a new "message" document in the "messages" collection in the Firestore database
                 mMsgCollectionRef.document().set(msg);
@@ -221,6 +230,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
                 .whereGreaterThan("timestamp", MessageUtils.getFirebaseMaxTimestamp())
                 //.whereNotEqualTo("author", User.getUsername())
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException e) {
                 if (e != null) {
@@ -237,6 +247,12 @@ public class MessageRoomActivity extends AppCompatActivity implements
 
                             Map<String, Object> msg = dc.getDocument().getData();
 
+                            // Decrypt the text sent to us by our friend
+                            String text = msg.get("text").toString();
+                            String decryptedText = RSA.decrypt(text, RSA.getPrivateKeyBytesBase64());
+                            msg.replace("text", decryptedText);
+
+                            // Make a content values object out of the decrypted message
                             ContentValues values = convertMapToContentValues(msg);
 
 //                            ContentValues values = new ContentValues();
