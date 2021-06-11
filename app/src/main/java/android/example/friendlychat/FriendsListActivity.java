@@ -51,12 +51,6 @@ public class FriendsListActivity extends AppCompatActivity {
     private ListenerRegistration mListenerRegistration;
 
     private FriendsAdapter mAdapter;
-    private final String emailId1 = "rishitaburman7@gmail.com";
-    private final String emailId2 = "reenaburman888@gmail.com";
-    private final String emailId3 = "saritb734@gmail.com";
-    private final String[] emails = new String[]{emailId1, emailId2, emailId3};
-
-    private String[] friends = new String[]{};
 
     private static final int RC_SIGN_IN = 1;
     private static final int RC_ADD_FRIEND = 2;
@@ -191,11 +185,11 @@ public class FriendsListActivity extends AppCompatActivity {
 
             if(resultCode == Activity.RESULT_OK) {
                 reloadAdapter();
-                Log.d(LOG_TAG, "reloadAdapter() after adding new friend");
-                Toast.makeText(this, "reloadAdapter() after adding new friend", Toast.LENGTH_SHORT).show();
+                //Log.d(LOG_TAG, "reloadAdapter() after adding new friend");
+                //Toast.makeText(this, "reloadAdapter() after adding new friend", Toast.LENGTH_SHORT).show();
             } else {
-                Log.d(LOG_TAG, "adapter not reloaded");
-                Toast.makeText(this, "adapter not reloaded", Toast.LENGTH_SHORT).show();
+                //Log.d(LOG_TAG, "adapter not reloaded");
+                //Toast.makeText(this, "adapter not reloaded", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -237,16 +231,10 @@ public class FriendsListActivity extends AppCompatActivity {
         // generating cryptographic keys if not there yet
         RSA.loadKeysFromSharedPreferences(this);
         if(RSA.getPublicKeyBytesBase64() == null || RSA.getPrivateKeyBytesBase64() == null){
-            Log.e(LOG_TAG, "Public or private key is null");
+            //Log.e(LOG_TAG, "Public or private key is null");
             RSA.generateKeys();
             RSA.saveKeysToSharedPreferences(FriendsListActivity.this);
         }
-
-        // just for debugging, remove if necessary
-//        RSA.loadKeysFromSharedPreferences(this);
-//        if(RSA.getPublicKeyBytesBase64() == null || RSA.getPrivateKeyBytesBase64() == null){
-//            Log.e(LOG_TAG, "Public or private key is still null");
-//        }
 
         // putting the publicKey into the map for uploading to Firestore
         // as part of the "user" document

@@ -207,38 +207,13 @@ public class MessageRoomActivity extends AppCompatActivity implements
         //room.put("usersInRoom", new String[]{User.getMyUid(), mFriendUid});
         room.put(User.getMyUid(), true);
         room.put(mFriendUid, true);
-        //room.put("messages", null);
 
         mRoomId = getMessageRoomId(User.getMyUid(), mFriendUid);
         DatabaseManager.db.collection("rooms").document(mRoomId)
                 .set(room, SetOptions.merge());
 
-        //Log.d(LOG_TAG, "RoomId = " + mRoomId);
-
         mMsgCollectionRef = DatabaseManager.db.collection("rooms").document(mRoomId)
                 .collection("messages");
-
-//        DatabaseManager.db.collection("rooms")
-//                .whereEqualTo(User.getMyUid(), true)
-//                .whereEqualTo(mFriendUid, true)
-//                .get()
-//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-//                        if (task.isSuccessful()) {
-//                            for (QueryDocumentSnapshot document : task.getResult()) {
-//
-//                                mMsgCollectionRef = document.getReference()
-//                                        .collection("messages");
-//
-//                                Log.d(LOG_TAG, document.getId() + " => " + document.getData());
-//                            }
-//
-//                        } else {
-//                            Log.d(LOG_TAG, "Error getting documents: ", task.getException());
-//                        }
-//                    }
-//                });
 
         mListenerRegistration = mMsgCollectionRef
                 .orderBy("timestamp")
@@ -270,13 +245,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
                             // Make a content values object out of the decrypted message
                             ContentValues values = convertMapToContentValues(msg);
 
-//                            ContentValues values = new ContentValues();
-//                            values.put("text", dc.getDocument().getString("text"));
-//                            values.put("author", dc.getDocument().getString("author"));
-//                            values.put("roomId", dc.getDocument().getString("roomId"));
-//                            values.put("timestamp", millisecondTimestamp);
-
-                            // Set the maximum timestamp whenever a new value is inserted into the local database
+                            // update the MaxTimestamp whenever a new messages is inserted
                             MessageUtils.setMaxTimeStamp((long) values.get("timestamp"));
 
                             // convert Hashmap to ContentValues and insert into the local database
@@ -338,7 +307,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
 
                 // Pick only those messages which belong to this current message room
                 String selection = MessageEntry.COLUMN_ROOMID + " = \'" + mRoomId + "\'";
-                Log.i(LOG_TAG, "mRoomId = " + mRoomId);
+                //Log.i(LOG_TAG, "mRoomId = " + mRoomId);
 
                 // Create a new Cursor loader object, which returns a Cursor containing
                 // our desired rows (or tuples) from the "messages" table

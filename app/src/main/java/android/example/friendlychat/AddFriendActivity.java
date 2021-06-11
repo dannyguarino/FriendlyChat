@@ -68,8 +68,6 @@ public class AddFriendActivity extends AppCompatActivity {
 
     private void saveFriend(){
 
-        //final String[] name = {};
-        //final String[] name = new String[1];
         final String email = mEmailEditText.getText().toString().trim();
 
         DatabaseManager.db.collection("users").document(email)

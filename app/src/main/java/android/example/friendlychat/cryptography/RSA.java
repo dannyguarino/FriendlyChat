@@ -106,7 +106,7 @@ public class RSA {
         SharedPreferences sharedPref = activity.getPreferences(Context.MODE_PRIVATE);
 
         SharedPreferences.Editor editor = sharedPref.edit();
-        Log.e(LOG_TAG, "Keys stored in SharedPreferenes");
+        //Log.e(LOG_TAG, "Keys stored in SharedPreferenes");
         editor.putString("publicKeyBytesBase64", publicKeyBytesBase64);
         editor.putString("privateKeyBytesBase64", privateKeyBytesBase64);
         editor.apply();
@@ -117,7 +117,7 @@ public class RSA {
         Activity activity = (Activity) context;
         SharedPreferences sharedPref = activity.getPreferences(Context.MODE_PRIVATE);
 
-        Log.e(LOG_TAG, "Keys loaded from SharedPreferences");
+        //Log.e(LOG_TAG, "Keys loaded from SharedPreferences");
         publicKeyBytesBase64 = sharedPref.getString("publicKeyBytesBase64", null);
         privateKeyBytesBase64 = sharedPref.getString("privateKeyBytesBase64", null);
     }
@@ -137,28 +137,4 @@ public class RSA {
     public static String getFriendPublicKey() {
         return friendPublicKey;
     }
-
-    //    public static void stringToKey(String publicKeyB64) {
-//
-//        if (publicKeyB64.contains("-----BEGIN PUBLIC KEY-----") || publicKeyB64.contains("-----END PUBLIC KEY-----"))
-//            publicKeyB64 = publicKeyB64.replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "");
-//        if (publicKeyB64.contains("-----BEGIN RSA PUBLIC KEY-----") || publicKeyB64.contains("-----END RSA PUBLIC KEY-----"))
-//            publicKeyB64 = publicKeyB64.replace("-----BEGIN RSA PUBLIC KEY-----", "").replace("-----END RSA PUBLIC KEY-----", "");
-//
-//        // ok, you may need to use the Base64 decoder of bouncy or Android instead
-//        try{
-//            byte[] decoded = Base64.decode(publicKeyB64, Base64.DEFAULT);
-//            org.bouncycastle.asn1.pkcs.RSAPublicKey pkcs1PublicKey = org.bouncycastle.asn1.pkcs.RSAPublicKey.getInstance(decoded);
-//            BigInteger modulus = pkcs1PublicKey.getModulus();
-//            BigInteger publicExponent = pkcs1PublicKey.getPublicExponent();
-//            RSAPublicKeySpec keySpec = new RSAPublicKeySpec(modulus, publicExponent);
-//            KeyFactory kf = KeyFactory.getInstance("RSA");
-//            PublicKey generatedPublic = kf.generatePublic(keySpec);
-//            friendPublicKey =generatedPublic;
-//        }
-//        catch (Exception e){
-//            Log.i("your log","errro in dear function");
-//        }
-//
-//    }
 }
