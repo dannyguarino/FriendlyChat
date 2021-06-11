@@ -4,10 +4,17 @@ public class Friend {
 
     private String mName;
     private String mEmailId;
+    private String mFriendPublicKey;
 
     public Friend(String name, String emailId){
         mName = name;
         mEmailId = emailId;
+    }
+
+    public Friend(String name, String emailId, String friendPublicKey){
+        mName = name;
+        mEmailId = emailId;
+        mFriendPublicKey = friendPublicKey;
     }
 
     public void setEmailId(String mEmailId) {
@@ -24,5 +31,13 @@ public class Friend {
 
     public String getName() {
         return mName;
+    }
+
+    public String getFriendPublicKey() {
+        return mFriendPublicKey;
+    }
+
+    public void setFriendPublicKey(String mFriendPublicKey) {
+        this.mFriendPublicKey = mFriendPublicKey;
     }
 }

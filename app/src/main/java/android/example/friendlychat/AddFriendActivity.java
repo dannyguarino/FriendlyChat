@@ -6,12 +6,14 @@ import androidx.core.app.NavUtils;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.example.friendlychat.cryptography.RSA;
 import android.example.friendlychat.data.MessageContract;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -77,12 +79,18 @@ public class AddFriendActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                         if(task.isSuccessful()) {
                             DocumentSnapshot document = task.getResult();
-                            String name;
+                            String name = "";
+                            String friendPublicKey = "";
                             if (document.exists()) {
                                 name = document.get("userName").toString();
+                                friendPublicKey = document.get("userPublicKey").toString();
+                                //RSA.setFriendPublicKey(document.get("userPublicKey").toString());
                                 Log.d(LOG_TAG, "document.get(\"userName\").toString() = " + document.get("userName").toString());
                             }
                             else{
+                                Toast.makeText(AddFriendActivity.this,
+                                        "Couldn't add friend!\nYour friend is not yet registered on Friendly Chat!", Toast.LENGTH_SHORT).show();
+                                finish();
                                 name = mNameEditText.getText().toString().trim();
                                 Log.d(LOG_TAG, "mNameEditText.getText().toString().trim() = " + mNameEditText.getText().toString().trim());
                             }
@@ -90,6 +98,7 @@ public class AddFriendActivity extends AppCompatActivity {
                             Map<String, Object> friendMap = new HashMap<>();
                             friendMap.put("userName", name);
                             friendMap.put("emailId", email);
+                            friendMap.put("userPublicKey", friendPublicKey);
 
                             DatabaseManager.db.collection("users").document(User.getEmailId())
                                     .collection("contacts").document(email)

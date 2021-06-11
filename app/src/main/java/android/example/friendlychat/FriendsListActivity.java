@@ -6,8 +6,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.example.friendlychat.cryptography.RSA;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -96,6 +100,7 @@ public class FriendsListActivity extends AppCompatActivity {
                 Friend friend = (Friend) parent.getAdapter().getItem(position);
                 intent.putExtra("friendName", friend.getName());
                 intent.putExtra("friendUid", friend.getEmailId());
+                intent.putExtra("friendPublicKey", friend.getFriendPublicKey());
                 startActivity(intent);
             }
         });
@@ -128,7 +133,8 @@ public class FriendsListActivity extends AppCompatActivity {
                                 case ADDED:
 
                                     Friend friend = new Friend(dc.getDocument().getString("userName"),
-                                            dc.getDocument().getString("emailId"));
+                                            dc.getDocument().getString("emailId"),
+                                            dc.getDocument().getString("userPublicKey"));
 
                                     mAdapter.add(friend);
                                     break;
@@ -142,6 +148,24 @@ public class FriendsListActivity extends AppCompatActivity {
                         }
                     }
                 });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()){
+            case R.id.sign_out_menu:
+                AuthUI.getInstance().signOut(this);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     private void detachDatabaseReadListener(){
@@ -208,27 +232,27 @@ public class FriendsListActivity extends AppCompatActivity {
         // Putting the "userInfo" into the "users" collection
         userInfo.put("userName", user.getDisplayName());
         userInfo.put("emailId", user.getEmail());
+
+        // generating cryptographic keys if not there yet
+        RSA.loadKeysFromSharedPreferences(this);
+        if(RSA.getPublicKeyBytesBase64() == null || RSA.getPrivateKeyBytesBase64() == null){
+            RSA.generateKeys();
+            RSA.saveKeysToSharedPreferences(this);
+        }
+
+        // putting the publicKey into the map for uploading to Firestore
+        // as part of the "user" document
+        userInfo.put("userPublicKey", RSA.getPublicKeyBytesBase64());
         findExistingOrAddNewUser(userInfo);
 
         // Set the memeber variables in the "User" class
         User.setEmailId(user.getEmail());
         User.setUsername(user.getDisplayName());
-        Log.d(LOG_TAG, "User.getEmailId = " + User.getEmailId());
+        //Log.d(LOG_TAG, "User.getEmailId = " + User.getEmailId());
 
         // Show a toast message when the user Authentication is complete
         Toast.makeText(FriendsListActivity.this,
                 "You're now signed in as " + User.getEmailId() + ". Welcome to FriendlyChat!", Toast.LENGTH_SHORT).show();
-
-        // initialize the friends list (or array)
-//        for(String email: emails){
-//            Log.d(LOG_TAG, "email = " + email + ", User.getmEmailId() = " + User.getEmailId() + ", User.getmUsername = " + User.getUsername());
-//            if(!email.equals(User.getEmailId())){
-//
-//                mAdapter.add(new Friend(email.substring(0, 5), email));
-//            }
-//        }
-
-        //reloadAdapter();
     }
 
     @Override

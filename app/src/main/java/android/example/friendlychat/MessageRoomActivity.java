@@ -8,8 +8,10 @@ import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.example.friendlychat.cryptography.RSA;
 import android.example.friendlychat.data.MessageContract.MessageEntry;
 import android.example.friendlychat.data.MessageUtils;
 import android.net.Uri;
@@ -90,8 +92,10 @@ public class MessageRoomActivity extends AppCompatActivity implements
         Log.i(LOG_TAG, "onCreate() called: timestamp initialized from SharedPreferences");
 
         // Extract the friend Uid and Name from the Intent Extras
-        mFriendUid = getIntent().getStringExtra("friendUid");
-        mFriendName = getIntent().getStringExtra("friendName");
+        Intent intent = getIntent();
+        mFriendUid = intent.getStringExtra("friendUid");
+        mFriendName = intent.getStringExtra("friendName");
+        RSA.setFriendPublicKey(intent.getStringExtra("friendPublicKey"));
 
         // Initialize references to views
         mProgressBar = findViewById(R.id.progressBar);
