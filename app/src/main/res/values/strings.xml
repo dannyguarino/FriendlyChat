@@ -22,4 +22,6 @@
     <string name="key_public_key">publicKeyBytesBase64</string>
     <string name="key_private_key">privateKeyBytesBase64</string>
 
+    <string name="hint_type_message">Type a message</string>
+
 </resources>

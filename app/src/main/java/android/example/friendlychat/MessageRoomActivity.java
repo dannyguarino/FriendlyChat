@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NavUtils;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
@@ -22,6 +23,8 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -71,6 +74,8 @@ public class MessageRoomActivity extends AppCompatActivity implements
     private static final String ANONYMOUS = "anonymous";
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 1000;
 
+    public static final int RC_PHOTO_PICKER = 2;
+
     private ListView mMessageListView;
     private ProgressBar mProgressBar;
     private ImageButton mPhotoPickerButton;
@@ -101,6 +106,12 @@ public class MessageRoomActivity extends AppCompatActivity implements
         mFriendName = intent.getStringExtra("friendName");
         mFriendPublicKey = intent.getStringExtra("friendPublicKey");
         //RSA.setFriendPublicKey(intent.getStringExtra("friendPublicKey"));
+
+        // Set the title of the action bar
+        setTitle(mFriendName);
+
+        // enable the back button on the Action Bar
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // Initialize references to views
         mProgressBar = findViewById(R.id.progressBar);
@@ -139,6 +150,17 @@ public class MessageRoomActivity extends AppCompatActivity implements
             public void afterTextChanged(Editable editable) {}
         });
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(DEFAULT_MSG_LENGTH_LIMIT)});
+
+        // ImagePickerButton shows an image picker to upload a image for a message
+        mPhotoPickerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("image/jpeg");
+                intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+                startActivityForResult(Intent.createChooser(intent, "Complete action using"), RC_PHOTO_PICKER);
+            }
+        });
 
         // Send button sends a message and clears the EditText
         mSendButton.setOnClickListener(new View.OnClickListener() {
@@ -184,6 +206,22 @@ public class MessageRoomActivity extends AppCompatActivity implements
 //                                .set(value, SetOptions.merge());
 //                    }
 //                });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        switch (item.getItemId()){
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(MessageRoomActivity.this);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private ContentValues convertMapToContentValues(Map<String, Object> msg){

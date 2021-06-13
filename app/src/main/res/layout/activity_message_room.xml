@@ -20,37 +20,135 @@
         android:transcriptMode="alwaysScroll"
         tools:listitem="@layout/item_message"/>
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/linearLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/photoPickerButton"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="@android:drawable/ic_menu_gallery" />
-
-        <EditText
-            android:id="@+id/messageEditText"
-            android:layout_width="0dp"
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1" />
+            android:layout_toStartOf="@id/sendButtonFrame"
+            android:layout_alignParentStart="true"
+            android:background="@drawable/type_message_bar"
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/sendButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:enabled="false"
-            android:text="@string/send_button_label"/>
+            <EditText
+                android:id="@+id/messageEditText"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="20dp"
+                android:hint="@string/hint_type_message"
+                android:background="@android:color/transparent"
+                android:layout_toEndOf="@id/photoPickerButton"
+                android:layout_gravity="center_vertical" />
 
-    </LinearLayout>
+            <ImageButton
+                android:id="@+id/photoPickerButton"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginStart="10dp"
+                android:layout_centerVertical="true"
+                android:layout_alignParentStart="true"
+                android:background="@android:drawable/ic_menu_gallery" />
+
+        </RelativeLayout>
+
+        <FrameLayout
+            android:id="@+id/sendButtonFrame"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="6dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/send_arrow_background">
+
+            <Button
+                android:id="@+id/sendButton"
+                android:background="@drawable/baseline_send_white_24"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="6dp"
+                android:enabled="false" />
+
+        </FrameLayout>
+
+
+    </RelativeLayout>
+
+<!--    <RelativeLayout-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_alignParentBottom="true"-->
+<!--        android:layout_alignParentLeft="true"-->
+<!--        android:layout_alignParentStart="true"-->
+<!--        android:orientation="horizontal">-->
+
+<!--        <EditText-->
+<!--            android:id="@+id/messageEditText"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="50dp"-->
+<!--            android:hint="@string/hint_type_message"-->
+<!--            android:layout_toLeftOf="@id/sendButton"-->
+<!--            android:layout_toRightOf="@id/photoPickerButton"-->
+<!--            android:background="@drawable/type_message_bar"-->
+<!--            android:layout_gravity="center_vertical" />-->
+
+<!--        <ImageButton-->
+<!--            android:id="@+id/photoPickerButton"-->
+<!--            android:layout_width="36dp"-->
+<!--            android:layout_height="36dp"-->
+<!--            android:layout_centerVertical="true"-->
+<!--            android:layout_alignParentStart="true"-->
+<!--            android:background="@android:drawable/ic_menu_gallery" />-->
+
+<!--        <Button-->
+<!--            android:id="@+id/sendButton"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_alignParentRight="true"-->
+<!--            android:layout_gravity="bottom"-->
+<!--            android:enabled="false"-->
+<!--            android:text="@string/send_button_label"/>-->
+<!--        -->
+<!--    </RelativeLayout>-->
+
+<!--    <LinearLayout-->
+<!--        android:id="@+id/linearLayout"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_alignParentBottom="true"-->
+<!--        android:layout_alignParentLeft="true"-->
+<!--        android:layout_alignParentStart="true"-->
+<!--        android:orientation="horizontal">-->
+
+<!--        <ImageButton-->
+<!--            android:id="@+id/photoPickerButton"-->
+<!--            android:layout_width="36dp"-->
+<!--            android:layout_height="36dp"-->
+<!--            android:background="@android:drawable/ic_menu_gallery" />-->
+
+<!--        <EditText-->
+<!--            android:id="@+id/messageEditText"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:background="@drawable/type_message_bar"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="center_vertical"-->
+<!--            android:layout_weight="1" />-->
+
+<!--        <Button-->
+<!--            android:id="@+id/sendButton"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="bottom"-->
+<!--            android:enabled="false"-->
+<!--            android:text="@string/send_button_label"/>-->
+
+<!--    </LinearLayout>-->
 
     <ProgressBar
         android:id="@+id/progressBar"

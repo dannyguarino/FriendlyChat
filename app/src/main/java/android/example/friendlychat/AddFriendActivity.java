@@ -35,6 +35,11 @@ public class AddFriendActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_friend);
 
+        // set the title of the Activity
+
+        // enable the back button on the Action Bar
+        //getActionBar().setDisplayHomeAsUpEnabled(true);
+
         // Initialize the EditText fields
         mNameEditText = findViewById(R.id.et_friends_name);
         mEmailEditText = findViewById(R.id.et_friend_email);

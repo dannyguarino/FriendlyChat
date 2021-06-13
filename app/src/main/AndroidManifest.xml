@@ -10,7 +10,11 @@
         android:theme="@style/AppTheme">
         <activity android:name=".AddFriendActivity" />
         
-        <activity android:name=".MessageRoomActivity" />
+        <activity android:name=".MessageRoomActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="android.example.friendlychat.FriendsListActivity"/>
+        </activity>
         
         <activity
             android:name=".FriendsListActivity"

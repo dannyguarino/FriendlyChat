@@ -15,26 +15,18 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.Timestamp;
+
+import org.w3c.dom.Text;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class MessageCursorAdapter extends CursorAdapter {
 
 
     public MessageCursorAdapter(Context context, Cursor c) { super(context, c, 0); }
-
-//    @Override
-//    public View newView(Context context, Cursor cursor, ViewGroup parent) {
-//        return null;
-//    }
-//
-//    @Override
-//    public void bindView(View view, Context context, Cursor cursor) {
-//
-//    }
-//
-//    @Override
-//    public View getView(int position, View convertView, ViewGroup parent) {
-//
-//    }
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
@@ -47,17 +39,18 @@ public class MessageCursorAdapter extends CursorAdapter {
         View v;
 
         if(cursor.getString(cursor.getColumnIndex(MessageEntry.COLUMN_AUTHOR)).equals(User.getUsername())) {
-            v = LayoutInflater.from(context).inflate(R.layout.item_message_from,
+            v = LayoutInflater.from(context).inflate(R.layout.item_message_to,
                     parent, false);
             holder.viewType = 0;
         }
         else {
-            v = LayoutInflater.from(context).inflate(R.layout.item_message_to,
+            v = LayoutInflater.from(context).inflate(R.layout.item_message_from,
                     parent, false);
             holder.viewType = 1;
         }
 
-        holder.messageTextView = v.findViewById(R.id.text_view);
+        holder.messageTextView = v.findViewById(R.id.msg_text_view);
+        holder.timeTextView = v.findViewById(R.id.time_text_view);
         //holder.authorTextView = v.findViewById(R.id.nameTextView);
 
         v.setTag(holder);
@@ -69,13 +62,18 @@ public class MessageCursorAdapter extends CursorAdapter {
 
         ViewHolder holder = (ViewHolder) view.getTag();
 
-        //FriendlyMessage message = getItem(position);
         String text = cursor.getString(cursor.getColumnIndex(MessageEntry.COLUMN_TEXT));
+        long time = cursor.getLong(cursor.getColumnIndex(MessageEntry.COLUMN_TIMESTAMP));
         String author = cursor.getString(cursor.getColumnIndex(MessageEntry.COLUMN_AUTHOR));
 
         if(!TextUtils.isEmpty(text)){
             holder.messageTextView.setText(text);
         }
+
+        Date date = new Date(time);
+        SimpleDateFormat curFormat = new SimpleDateFormat("MMM d, ''yy h:mm a");
+        String timeString = curFormat.format(date);
+        holder.timeTextView.setText(timeString);
 
 //        if(!TextUtils.isEmpty(author)){
 //            holder.authorTextView.setText(author);
@@ -101,6 +99,7 @@ public class MessageCursorAdapter extends CursorAdapter {
 
     public static class ViewHolder {
         public TextView messageTextView;
+        public TextView timeTextView;
 //        public TextView authorTextView;
         public int viewType;
     }
