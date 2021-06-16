@@ -5,6 +5,16 @@
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <ImageView
+        android:id="@+id/photoImageView"
+        tools:src="@color/cardview_light_background"
+        android:layout_width="300dp"
+        android:layout_height="400dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@drawable/border"
+        android:adjustViewBounds="true" />
+
     <TextView
         android:id="@+id/msg_text_view"
         android:layout_width="wrap_content"
@@ -20,7 +30,7 @@
         tools:text="Hey there! I am using Friendly chat." />
 
     <TextView
-        android:id="@+id/time_text_view"
+        android:id="@+id/msg_time_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toEndOf="@+id/msg_text_view"
@@ -28,6 +38,17 @@
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="@+id/msg_text_view"
         app:layout_constraintTop_toBottomOf="@+id/msg_text_view"
+        tools:text="13th June, 5:40 pm" />
+
+    <TextView
+        android:id="@+id/photo_time_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/common_google_signin_btn_text_light"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/photoImageView"
         tools:text="13th June, 5:40 pm" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

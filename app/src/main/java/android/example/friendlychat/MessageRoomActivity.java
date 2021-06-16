@@ -33,6 +33,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
@@ -44,6 +45,9 @@ import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -86,6 +90,8 @@ public class MessageRoomActivity extends AppCompatActivity implements
 
     private static CollectionReference mMsgCollectionRef;
     private static ListenerRegistration mListenerRegistration;
+    private FirebaseStorage mFirebaseStorage;
+    private StorageReference mChatPhotosStorageReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,6 +114,10 @@ public class MessageRoomActivity extends AppCompatActivity implements
 
         // enable the back button on the Action Bar
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        // Initialize the Firebase components
+        mFirebaseStorage = FirebaseStorage.getInstance();
+        mChatPhotosStorageReference = mFirebaseStorage.getReference().child("chat_photos");
 
         // Initialize references to views
         mProgressBar = findViewById(R.id.progressBar);
@@ -169,6 +179,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
 
                 Map<String, Object> msg = new HashMap<>();
                 msg.put("text", text);
+                msg.put("photoUrl", "");
                 msg.put("author", User.getUsername());
                 msg.put("roomId", mRoomId);
                 msg.put("timestamp", new Timestamp(new Date()));
@@ -205,6 +216,49 @@ public class MessageRoomActivity extends AppCompatActivity implements
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable @org.jetbrains.annotations.Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == RC_PHOTO_PICKER && resultCode == RESULT_OK) {
+            Uri selectedImageUri = data.getData();
+            StorageReference photoRef =
+                    mChatPhotosStorageReference.child(selectedImageUri.getLastPathSegment());
+
+            UploadTask uploadTask = photoRef.putFile(selectedImageUri);
+
+            uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    Task<Uri> firebaseUri = taskSnapshot.getStorage().getDownloadUrl();
+                    firebaseUri.addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+
+                            String downloadUrl = uri.toString();
+
+                            Map<String, Object> msg = new HashMap<>();
+                            msg.put("text", "");
+                            msg.put("photoUrl", downloadUrl);
+                            msg.put("author", User.getUsername());
+                            msg.put("roomId", mRoomId);
+                            msg.put("timestamp", new Timestamp(new Date()));
+
+                            // store my own messages in my local SQLite Database directly
+                            ContentValues values = convertMapToContentValues(msg);
+                            getApplicationContext().getContentResolver().insert(MessageEntry.CONTENT_URI, values);
+
+                            // Set the maximum timestamp whenever a new value is inserted into the local database
+                            MessageUtils.setMaxTimeStamp((long) values.get("timestamp"));
+
+                            // create a new "message" document in the "messages" collection in the Firestore database
+                            mMsgCollectionRef.document().set(msg);
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         return super.onCreateOptionsMenu(menu);
     }
@@ -228,6 +282,7 @@ public class MessageRoomActivity extends AppCompatActivity implements
 
         ContentValues values = new ContentValues();
         values.put("text", msg.get("text").toString());
+        values.put("photoUrl", msg.get("photoUrl").toString());
         values.put("author", msg.get("author").toString());
         values.put("roomId", msg.get("roomId").toString());
         values.put("timestamp", millisecondTimestamp);

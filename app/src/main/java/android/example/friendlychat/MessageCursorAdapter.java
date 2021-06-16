@@ -2,24 +2,17 @@ package android.example.friendlychat;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.example.friendlychat.data.MessageContract;
 import android.example.friendlychat.data.MessageContract.MessageEntry;
-import android.example.friendlychat.data.MessageUtils;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.recyclerview.widget.RecyclerView;
-
 import com.bumptech.glide.Glide;
-import com.google.firebase.Timestamp;
 
-import org.w3c.dom.Text;
-
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -30,10 +23,6 @@ public class MessageCursorAdapter extends CursorAdapter {
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-
-//        if(cursor == null){
-//            return null;
-//        }
 
         ViewHolder holder = new ViewHolder();
         View v;
@@ -50,7 +39,9 @@ public class MessageCursorAdapter extends CursorAdapter {
         }
 
         holder.messageTextView = v.findViewById(R.id.msg_text_view);
-        holder.timeTextView = v.findViewById(R.id.time_text_view);
+        holder.msgTimeTextView = v.findViewById(R.id.msg_time_text_view);
+        holder.photoImageView = v.findViewById(R.id.photoImageView);
+        holder.photoTimeTextView = v.findViewById(R.id.photo_time_text_view);
         //holder.authorTextView = v.findViewById(R.id.nameTextView);
 
         v.setTag(holder);
@@ -63,17 +54,32 @@ public class MessageCursorAdapter extends CursorAdapter {
         ViewHolder holder = (ViewHolder) view.getTag();
 
         String text = cursor.getString(cursor.getColumnIndex(MessageEntry.COLUMN_TEXT));
+        String photoUrl = cursor.getString(cursor.getColumnIndex(MessageEntry.COLUMN_PHOTO_URL));
         long time = cursor.getLong(cursor.getColumnIndex(MessageEntry.COLUMN_TIMESTAMP));
-        String author = cursor.getString(cursor.getColumnIndex(MessageEntry.COLUMN_AUTHOR));
-
-        if(!TextUtils.isEmpty(text)){
-            holder.messageTextView.setText(text);
-        }
+        //String author = cursor.getString(cursor.getColumnIndex(MessageEntry.COLUMN_AUTHOR));
 
         Date date = new Date(time);
         SimpleDateFormat curFormat = new SimpleDateFormat("MMM d, ''yy h:mm a");
         String timeString = curFormat.format(date);
-        holder.timeTextView.setText(timeString);
+
+        if(text != null && !TextUtils.isEmpty(text)){
+            holder.messageTextView.setVisibility(View.VISIBLE);
+            holder.msgTimeTextView.setVisibility(View.VISIBLE);
+            holder.photoImageView.setVisibility(View.GONE);
+            holder.photoTimeTextView.setVisibility(View.GONE);
+            holder.messageTextView.setText(text);
+            holder.msgTimeTextView.setText(timeString);
+        }
+        else if(photoUrl != null && !TextUtils.isEmpty(photoUrl)){
+            holder.messageTextView.setVisibility(View.GONE);
+            holder.msgTimeTextView.setVisibility(View.GONE);
+            holder.photoImageView.setVisibility(View.VISIBLE);
+            holder.photoTimeTextView.setVisibility(View.VISIBLE);
+            Glide.with(holder.photoImageView.getContext())
+                    .load(photoUrl)
+                    .into(holder.photoImageView);
+            holder.photoTimeTextView.setText(timeString);
+        }
 
 //        if(!TextUtils.isEmpty(author)){
 //            holder.authorTextView.setText(author);
@@ -99,7 +105,9 @@ public class MessageCursorAdapter extends CursorAdapter {
 
     public static class ViewHolder {
         public TextView messageTextView;
-        public TextView timeTextView;
+        public TextView msgTimeTextView;
+        public ImageView photoImageView;
+        public TextView photoTimeTextView;
 //        public TextView authorTextView;
         public int viewType;
     }
