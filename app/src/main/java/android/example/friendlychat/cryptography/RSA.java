@@ -3,28 +3,22 @@ package android.example.friendlychat.cryptography;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.example.friendlychat.MainActivity;
 import android.util.Base64;
 import android.util.Log;
 
-import java.math.BigInteger;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.Cipher;
 
 public class RSA {
 
-    private static final String LOG_TAG = MainActivity.class.getName();
+    private static final String LOG_TAG = RSA.class.getName();
 
     private static Key publicKey = null;
     private static Key privateKey = null;
