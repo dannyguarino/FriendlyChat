@@ -2,4 +2,10 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <dimen name="message_type_bar_height">45dp</dimen>
+
+    <!-- Margins for the relative layout containing the message typing editText -->
+    <dimen name="margin_right_message_type">8dp</dimen>
+    <dimen name="margin_left_message_type">8dp</dimen>
 </resources>

@@ -27,6 +27,7 @@ public class MessagesDbHelper extends SQLiteOpenHelper {
                 "CREATE TABLE " + MessageEntry.TABLE_NAME + " (" +
                         MessageEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                         MessageEntry.COLUMN_TEXT + " TEXT, " +
+                        MessageEntry.COLUMN_PHOTO_URL + " TEXT, " +
                         MessageEntry.COLUMN_AUTHOR + " TEXT, " +
                         MessageEntry.COLUMN_ROOMID + " TEXT, " +
                         MessageEntry.COLUMN_TIMESTAMP + " INTEGER NOT NULL UNIQUE);";

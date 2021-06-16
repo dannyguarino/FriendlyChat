@@ -3,6 +3,8 @@ package android.example.friendlychat.data;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
+import java.net.URL;
+
 public class MessageContract {
 
     public static final String CONTENT_AUTHORITY = "android.example.friendlychat";
@@ -22,6 +24,7 @@ public class MessageContract {
         public static final String TABLE_NAME = "messages";
 
         public static final String COLUMN_TEXT = "text";
+        public static final String COLUMN_PHOTO_URL = "photoUrl";
         public static final String COLUMN_AUTHOR = "author";
         public static final String COLUMN_ROOMID = "roomId";
         public static final String COLUMN_TIMESTAMP = "timestamp";

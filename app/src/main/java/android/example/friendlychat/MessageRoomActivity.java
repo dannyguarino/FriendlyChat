@@ -56,16 +56,12 @@ public class MessageRoomActivity extends AppCompatActivity implements
 
     public static final String[] MESSAGES_QUERY_PROJECTION = {
             MessageEntry.COLUMN_TEXT,
+            MessageEntry.COLUMN_PHOTO_URL,
             MessageEntry.COLUMN_AUTHOR,
             MessageEntry.COLUMN_ROOMID,
             MessageEntry.COLUMN_TIMESTAMP,
             MessageEntry._ID
     };
-
-    public static final int INDEX_COLUMN_TEXT = 0;
-    public static final int INDEX_COLUMN_AUTHOR = 1;
-    public static final int INDEX_COLUMN_ROOMID = 2;
-    public static final int INDEX_COLUMN_TIMESTAMP = 3;
 
     private static final int ID_MESSAGE_LOADER = 65;
 
