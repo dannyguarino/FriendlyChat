@@ -2,7 +2,7 @@
 An `End-to-End Encryption` based Online Chatting Android App
 
 ## Overview
-`Friendly Chat` is an `End-to-End Encryption` based online chat app (just like `Whatsapp`). It uses the `RSA` cryptography algorithm to encode the text messages and the image URLs of the user before they are sent to  `Firebase Firestore` database. The sender uses the public key of the receiver, which is available on the `Firebase` database, to encrypt the messages. The targeted receiver can then use his/her private key to decrypt the messages locally on his/her device. Thus, the administrator (in this case, the `Firebase` administrator for `Friendly Chat`) has no knowledge of the what messages are exchanged between its users.
+`Friendly Chat` is an `End-to-End Encryption` based online chat app (just like `Whatsapp`). It uses the `RSA` cryptography algorithm to encode the text messages and the image URLs of the user before they are sent to the  `Firebase Firestore` database. The sender uses the public key of the receiver, which is available on the `Firebase` database, to encrypt the messages. The targeted receiver can then use his/her private key to decrypt the messages locally on his/her device. Thus, the administrator (in this case, the `Firebase` administrator for `Friendly Chat`) has no knowledge of what messages are exchanged between its users. Thus, `Friendly Chat` users have full privacy in terms of communicating with their `Friends`. 
 
 ## Google Authentication
 <p align="center">
