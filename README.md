@@ -1,6 +1,9 @@
 # FriendlyChat
 An `End-to-End Encryption` based Online Chatting Android App
 
+## Overview
+`Friendly Chat` is an `End-to-End Encryption` based online chat app (just like `Whatsapp`). It uses the `RSA` cryptography algorithm to encode the text messages and the image URLs of the user before they are sent to  `Firebase Firestore` database. The sender uses the public key of the receiver, which is available on the `Firebase` database, to encrypt the messages. The targeted receiver can then use his/her private key to decrypt the messages locally on his/her device. Thus, the administrator (in this case, the `Firebase` administrator for `Friendly Chat`) has no knowledge of the what messages are exchanged between its users.
+
 ## Google Authentication
 <p align="center">
   <img src="https://github.com/sbInfin1/FriendlyChat/blob/testingOutRoom/screenshots/samsungM30s/Screenshot_20210727-170719_Google%20Play%20services.jpg" width="270" height="585" title="google_auth_screen"/>
@@ -30,3 +33,11 @@ This is a screenshot of the message room in the devices of `Rishita Burman` and 
 </p>
 
 Messages created by the user appears the right aligned and in pink `chat bubble` and those received from the friend will appear left aligned and in turquoise bubble.  Further, the timestamp is attached below every message.
+
+## Sending Images
+<p align="center">
+  <img src="https://github.com/sbInfin1/FriendlyChat/blob/testingOutRoom/screenshots/samsungM30s/Screenshot_20210727-171144_Friendly%20Chat.jpg" width="270" height="585" title="message_room_rishita_3"/>
+  <img src="https://github.com/sbInfin1/FriendlyChat/blob/testingOutRoom/screenshots/samsungM11/Screenshot_20210727-171153_Friendly%20Chat.jpg" width="270" height="585" title="message_room_apple_pie_3"/>
+</p>
+
+Friends can share images with each other by selecting them from `File Explorer`. On clicking the `image` icon at the left corner of the message type bar, the `Image Picker` opens up. The user, then, can choose any valid image file to send to his/her friend.
